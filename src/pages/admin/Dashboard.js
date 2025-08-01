@@ -48,7 +48,7 @@ const AdminDashboard = () => {
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'REJECTED':
         return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
       default:
         return <ClockIcon className="h-5 w-5 text-blue-500" />;
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
         return 'text-green-700 bg-green-100';
       case 'REJECTED':
         return 'text-red-700 bg-red-100';
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return 'text-yellow-700 bg-yellow-100';
       default:
         return 'text-blue-700 bg-blue-100';
@@ -77,7 +77,7 @@ const AdminDashboard = () => {
     const progressMap = {
       'PENDING': 10,
       'FBO_REVIEW': 20,
-      'PASTOR_DOCUMENT': 15,
+      'REVIEWING_AGAIN': 15,
       'TRANSFER_TO_DM': 30,
       'DM_REVIEW': 35,
       'TRANSFER_TO_HOD': 45,

@@ -35,6 +35,7 @@ const AdminApplicationDetails = () => {
   const { user } = useSelector((state) => state.auth);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isAddingComment, setIsAddingComment] = useState(false);
+  const [canEdit, SetCanEdit] = useState(false);
 
   const {
     register,
@@ -54,6 +55,8 @@ const AdminApplicationDetails = () => {
 
   const selectedStatus = watch('status');
 
+
+
   useEffect(() => {
     if (id) {
       dispatch(getApplicationById(id));
@@ -69,7 +72,7 @@ const AdminApplicationDetails = () => {
         return <CheckCircleIcon className="h-8 w-8 text-green-500" />;
       case 'REJECTED':
         return <ExclamationTriangleIcon className="h-8 w-8 text-red-500" />;
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return <ExclamationTriangleIcon className="h-8 w-8 text-yellow-500" />;
       default:
         return <ClockIcon className="h-8 w-8 text-blue-500" />;
@@ -83,42 +86,83 @@ const AdminApplicationDetails = () => {
         return 'text-green-700 bg-green-100 border-green-200';
       case 'REJECTED':
         return 'text-red-700 bg-red-100 border-red-200';
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return 'text-yellow-700 bg-yellow-100 border-yellow-200';
       default:
         return 'text-blue-700 bg-blue-100 border-blue-200';
     }
   };
 
-  useEffect(()=> {
+  useEffect(() => {
+  if (id) {
+    dispatch(getApplicationById(id));
+    dispatch(getDocumentRequirements(id));
+    dispatch(getApplicationComments(id));
+  }
+}, [dispatch, id]);
 
-    const onStatusISubmit = async (status) => {
-      try {
-        await dispatch(updateApplicationStatus({
-          applicationId: id,
-          status: status,
-          comment: ''
-        })).unwrap();
-      } catch (error) {
-      console.log(error.error || 'Failed to update status');
-      }
+  // Then, handle the initial status update if needed, with better state tracking
+  useEffect(() => {
+    // Skip this effect if we don't have application data yet or if we're already processing
+    if (!currentApplication || isUpdatingStatus) return;
+    
+    const needsStatusUpdate = (status) => {
+      return (
+        (status === 'PENDING') ||
+        (status === 'TRANSFER_TO_DM') ||
+        (status === 'TRANSFER_TO_HOD') ||
+        (status === 'TRANSFER_TO_SG') ||
+        (status === 'TRANSFER_TO_CEO')
+      );
     };
 
-    let status = currentApplication?.status;
-    if (status === 'PENDING')
-      status = 'FBO_REVIEW'
-    else if (status === 'TRANSFER_TO_DM')
-      status = 'DM_REVIEW'
-    else if (status === 'TRANSFER_TO_HOD')
-      status = 'HOD_REVIEW'
-    else if (status === 'TRANSFER_TO_SG')
-      status = 'SG_REVIEW'
-    else if (status === 'TRANSFER_TO_CEO')
-      status = 'CEO_REVIEW'
+    const getCurrentStatus = () => {
+      let status = currentApplication.status;
+      if (status === 'PENDING')
+        return 'FBO_REVIEW';
+      else if (status === 'TRANSFER_TO_DM')
+        return 'DM_REVIEW';
+      else if (status === 'TRANSFER_TO_HOD')
+        return 'HOD_REVIEW';
+      else if (status === 'TRANSFER_TO_SG')
+        return 'SG_REVIEW';
+      else if (status === 'TRANSFER_TO_CEO')
+        return 'CEO_REVIEW';
+      return null;
+    };
 
-    onStatusISubmit(status)
-  
-  }, [id, currentApplication])
+    // Only update status if it's one of the "needs update" states
+    if (needsStatusUpdate(currentApplication.status)) {
+      const newStatus = getCurrentStatus();
+      if (newStatus) {
+        setIsUpdatingStatus(true); // Set loading state before making API call
+        
+        dispatch(updateApplicationStatus({
+          applicationId: id,
+          status: newStatus,
+          comment: ''
+        }))
+        .unwrap()
+        .then(() => {
+          // Explicitly refetch the application to get fresh data including canEdit
+          return dispatch(getApplicationById(id)).unwrap();
+        })
+        .then((result) => {
+          // Now we have fresh data, update canEdit
+          SetCanEdit(result.application.canEdit);
+        })
+        .catch((error) => {
+          console.error('Failed to update status:', error);
+        })
+        .finally(() => {
+          setIsUpdatingStatus(false);
+        });
+      }
+    } else {
+      // If we don't need to update the status, just set canEdit directly
+      SetCanEdit(currentApplication.canEdit);
+    }
+  }, [currentApplication, dispatch, id, isUpdatingStatus]);
 
   const formatStatus = (status) => {
     return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
@@ -130,21 +174,21 @@ const AdminApplicationDetails = () => {
 
     const validTransitions = {
       'FBO_OFFICER': {
-        'PENDING': ['TRANSFER_TO_DM', 'PASTOR_DOCUMENT'],
-        'FBO_REVIEW': ['TRANSFER_TO_DM', 'PASTOR_DOCUMENT'],
-        'PASTOR_DOCUMENT': ['FBO_REVIEW']
+        'PENDING': ['TRANSFER_TO_DM', 'REVIEWING_AGAIN'],
+        'FBO_REVIEW': ['TRANSFER_TO_DM', 'REVIEWING_AGAIN']
+        // 'REVIEWING_AGAIN': ['FBO_REVIEW']
       },
       'DIVISION_MANAGER': {
         'TRANSFER_TO_DM': ['DM_REVIEW'],
-        'DM_REVIEW': ['TRANSFER_TO_HOD', 'PASTOR_DOCUMENT']
+        'DM_REVIEW': ['TRANSFER_TO_HOD', 'REVIEWING_AGAIN']
       },
       'HOD': {
         'TRANSFER_TO_HOD': ['HOD_REVIEW'],
-        'HOD_REVIEW': ['TRANSFER_TO_SG', 'PASTOR_DOCUMENT']
+        'HOD_REVIEW': ['TRANSFER_TO_SG', 'REVIEWING_AGAIN']
       },
       'SECRETARY_GENERAL': {
         'TRANSFER_TO_SG': ['SG_REVIEW'],
-        'SG_REVIEW': ['TRANSFER_TO_CEO', 'PASTOR_DOCUMENT', 'REJECTED']
+        'SG_REVIEW': ['TRANSFER_TO_CEO', 'REVIEWING_AGAIN', 'REJECTED']
       },
       'CEO': {
         'TRANSFER_TO_CEO': ['CEO_REVIEW'],
@@ -283,7 +327,7 @@ const AdminApplicationDetails = () => {
   const statusToStepIndex = {
     'PENDING': 1,
     'FBO_REVIEW': 1,
-    'PASTOR_DOCUMENT': 1,
+    'REVIEWING_AGAIN': 1,
     'TRANSFER_TO_DM': 2,
     'DM_REVIEW': 2,
     'TRANSFER_TO_HOD': 3,
@@ -364,7 +408,7 @@ const AdminApplicationDetails = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Status Update Form */}
-          {statusOptions.length > 0 && currentApplication.canEdit && (
+          {statusOptions.length > 0 && canEdit && (
             <Card>
               <Card.Header>
                 <h2 className="text-xl font-semibold">Update Application Status</h2>

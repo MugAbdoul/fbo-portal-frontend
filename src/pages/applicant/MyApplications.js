@@ -34,7 +34,7 @@ const MyApplications = () => {
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'REJECTED':
         return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
       default:
         return <ClockIcon className="h-5 w-5 text-blue-500" />;
@@ -48,7 +48,7 @@ const MyApplications = () => {
         return 'text-green-700 bg-green-100 border-green-200';
       case 'REJECTED':
         return 'text-red-700 bg-red-100 border-red-200';
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return 'text-yellow-700 bg-yellow-100 border-yellow-200';
       default:
         return 'text-blue-700 bg-blue-100 border-blue-200';
@@ -63,7 +63,7 @@ const MyApplications = () => {
     const progressMap = {
       'PENDING': 10,
       'FBO_REVIEW': 20,
-      'PASTOR_DOCUMENT': 15,
+      'REVIEWING_AGAIN': 15,
       'TRANSFER_TO_DM': 30,
       'DM_REVIEW': 35,
       'TRANSFER_TO_HOD': 45,
@@ -106,7 +106,7 @@ const MyApplications = () => {
     { value: '', label: 'All Statuses' },
     { value: 'PENDING', label: 'Pending' },
     { value: 'FBO_REVIEW', label: 'FBO Review' },
-    { value: 'PASTOR_DOCUMENT', label: 'Missing Documents' },
+    { value: 'REVIEWING_AGAIN', label: 'Missing Documents' },
     { value: 'TRANSFER_TO_DM', label: 'Transfer to DM' },
     { value: 'DM_REVIEW', label: 'DM Review' },
     { value: 'TRANSFER_TO_HOD', label: 'Transfer to HOD' },
@@ -138,7 +138,7 @@ const MyApplications = () => {
       approved: applications.filter(app => app.status === 'APPROVED').length,
       certificateIssued: applications.filter(app => app.status === 'CERTIFICATE_ISSUED').length,
       rejected: applications.filter(app => app.status === 'REJECTED').length,
-      missingDocs: applications.filter(app => app.status === 'PASTOR_DOCUMENT').length,
+      missingDocs: applications.filter(app => app.status === 'REVIEWING_AGAIN').length,
     };
     return stats;
   };

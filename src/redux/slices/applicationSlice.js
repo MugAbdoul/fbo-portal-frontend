@@ -56,11 +56,27 @@ export const createApplication = createAsyncThunk(
   }
 );
 
+export const updateApplication = createAsyncThunk(
+  'applications/updateApplication',
+  async ({ applicationId, data }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/application/${applicationId}`, data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { error: 'Failed to update application' }
+      );
+    }
+  }
+);
+
+
 export const getApplications = createAsyncThunk(
   'applications/getAll',
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('/application');
+      console.log(response)
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { error: 'Failed to fetch applications' });
@@ -89,6 +105,7 @@ export const updateApplicationStatus = createAsyncThunk(
         status,
         comment: comment || '', // Use 'comment' instead of 'comments'
       });
+      console.log(response)
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { error: 'Failed to update status' });
@@ -330,6 +347,28 @@ const applicationSlice = createSlice({
       // Workflow Info
       .addCase(getWorkflowInfo.fulfilled, (state, action) => {
         state.workflowInfo = action.payload.workflow;
+      })
+
+      .addCase(updateApplication.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateApplication.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedApp = action.payload.application;
+        
+        // Update the current application
+        state.currentApplication = updatedApp;
+        
+        // Update the application in the applications array if it exists
+        const index = state.applications.findIndex(app => app.id === updatedApp.id);
+        if (index !== -1) {
+          state.applications[index] = updatedApp;
+        }
+      })
+      .addCase(updateApplication.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.error || 'Failed to update application';
       });
   },
 });

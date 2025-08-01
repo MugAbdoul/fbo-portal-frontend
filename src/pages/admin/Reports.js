@@ -56,7 +56,7 @@ const Reports = () => {
     { value: '', label: 'All Statuses' },
     { value: 'PENDING', label: 'Pending' },
     { value: 'FBO_REVIEW', label: 'FBO Review' },
-    { value: 'PASTOR_DOCUMENT', label: 'Missing Documents' },
+    { value: 'REVIEWING_AGAIN', label: 'Missing Documents' },
     { value: 'TRANSFER_TO_DM', label: 'Transfer to DM' },
     { value: 'DM_REVIEW', label: 'DM Review' },
     { value: 'TRANSFER_TO_HOD', label: 'Transfer to HOD' },
@@ -111,7 +111,7 @@ const Reports = () => {
     const colors = {
       'PENDING': '#3B82F6',
       'FBO_REVIEW': '#F59E0B', 
-      'PASTOR_DOCUMENT': '#6B7280',
+      'REVIEWING_AGAIN': '#6B7280',
       'TRANSFER_TO_DM': '#8B5CF6',
       'DM_REVIEW': '#8B5CF6',
       'TRANSFER_TO_HOD': '#06B6D4',

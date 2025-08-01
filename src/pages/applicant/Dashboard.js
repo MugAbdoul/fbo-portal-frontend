@@ -29,7 +29,7 @@ const Dashboard = () => {
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'REJECTED':
         return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
       default:
         return <ClockIcon className="h-5 w-5 text-blue-500" />;
@@ -43,7 +43,7 @@ const Dashboard = () => {
         return 'text-green-700 bg-green-100';
       case 'REJECTED':
         return 'text-red-700 bg-red-100';
-      case 'PASTOR_DOCUMENT':
+      case 'REVIEWING_AGAIN':
         return 'text-yellow-700 bg-yellow-100';
       default:
         return 'text-blue-700 bg-blue-100';
@@ -58,7 +58,7 @@ const Dashboard = () => {
     const progressMap = {
       'PENDING': 10,
       'FBO_REVIEW': 20,
-      'PASTOR_DOCUMENT': 15,
+      'REVIEWING_AGAIN': 15,
       'TRANSFER_TO_DM': 30,
       'DM_REVIEW': 35,
       'TRANSFER_TO_HOD': 45,
@@ -93,7 +93,7 @@ const Dashboard = () => {
     ).length,
     approved: applications.filter(app => app.status === 'APPROVED' || app.status === 'CERTIFICATE_ISSUED').length,
     rejected: applications.filter(app => app.status === 'REJECTED').length,
-    missingDocs: applications.filter(app => app.status === 'PASTOR_DOCUMENT').length,
+    missingDocs: applications.filter(app => app.status === 'REVIEWING_AGAIN').length,
   };
 
   // Fixed: Create a copy of the array before sorting
@@ -107,7 +107,7 @@ const Dashboard = () => {
 
   // Fixed: Create a copy for filtering as well
   const attentionApplications = [...applications].filter(app => 
-    app.status === 'PASTOR_DOCUMENT' || (app.canEdit && app.status === 'PENDING')
+    app.status === 'REVIEWING_AGAIN' || (app.canEdit && app.status === 'PENDING')
   );
 
   return (
@@ -361,7 +361,7 @@ const Dashboard = () => {
                       </div>
                       
                       <p className="text-sm text-gray-600">
-                        {application.status === 'PASTOR_DOCUMENT' 
+                        {application.status === 'REVIEWING_AGAIN' 
                           ? 'Please upload the required documents to continue the review process.'
                           : 'Your application is ready for submission.'
                         }
@@ -370,7 +370,7 @@ const Dashboard = () => {
                     
                     <Link to={`/applicant/applications/${application.id}`}>
                       <Button size="sm">
-                        {application.status === 'PASTOR_DOCUMENT' ? 'Upload Documents' : 'Complete Application'}
+                        {application.status === 'REVIEWING_AGAIN' ? 'Upload Documents' : 'Complete Application'}
                       </Button>
                     </Link>
                   </div>
