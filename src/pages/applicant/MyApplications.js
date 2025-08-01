@@ -106,7 +106,7 @@ const MyApplications = () => {
     { value: '', label: 'All Statuses' },
     { value: 'PENDING', label: 'Pending' },
     { value: 'FBO_REVIEW', label: 'FBO Review' },
-    { value: 'REVIEWING_AGAIN', label: 'Missing Documents' },
+    { value: 'REVIEWING_AGAIN', label: 'Reviewing again' },
     { value: 'TRANSFER_TO_DM', label: 'Transfer to DM' },
     { value: 'DM_REVIEW', label: 'DM Review' },
     { value: 'TRANSFER_TO_HOD', label: 'Transfer to HOD' },
@@ -185,7 +185,7 @@ const MyApplications = () => {
           
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-yellow-600">{stats.missingDocs}</div>
-            <div className="text-sm text-gray-500">Missing Docs</div>
+            <div className="text-sm text-gray-500">Reviewing Again</div>
           </Card>
           
           <Card className="p-4 text-center">

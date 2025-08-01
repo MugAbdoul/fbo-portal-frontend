@@ -4,7 +4,6 @@ import {
   ChartBarIcon,
   CalendarIcon,
   ArrowDownTrayIcon,
-  MapPinIcon,
   UserGroupIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
@@ -46,17 +45,14 @@ const Reports = () => {
     { value: 'summary', label: 'Application Summary Report' },
     { value: 'detailed', label: 'Detailed Application Report' },
     { value: 'analytics', label: 'Analytics Report' },
-    { value: 'compliance', label: 'Compliance Report' },
-    { value: 'demographic', label: 'Demographic Report' },
-    { value: 'processing', label: 'Processing Efficiency Report' },
-    { value: 'geographic', label: 'Geographic Distribution Report' },
+    { value: 'demographic', label: 'Demographic Report' }
   ];
 
   const statusOptions = [
     { value: '', label: 'All Statuses' },
     { value: 'PENDING', label: 'Pending' },
     { value: 'FBO_REVIEW', label: 'FBO Review' },
-    { value: 'REVIEWING_AGAIN', label: 'Missing Documents' },
+    { value: 'REVIEWING_AGAIN', label: 'Reviewing again' },
     { value: 'TRANSFER_TO_DM', label: 'Transfer to DM' },
     { value: 'DM_REVIEW', label: 'DM Review' },
     { value: 'TRANSFER_TO_HOD', label: 'Transfer to HOD' },
@@ -126,14 +122,6 @@ const Reports = () => {
     };
     
     return colors[status] || '#6B7280';
-  };
-
-  const getProgressColor = (progress) => {
-    if (progress >= 80) return '#10B981'; // Green
-    if (progress >= 60) return '#3B82F6'; // Blue
-    if (progress >= 40) return '#F59E0B'; // Yellow
-    if (progress >= 20) return '#F97316'; // Orange
-    return '#6B7280'; // Gray
   };
 
   return (
@@ -223,8 +211,8 @@ const Reports = () => {
               <ClockIcon className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">In Progress</p>
-              <p className="text-2xl font-bold text-gray-900">{reportData?.overview?.in_progress || 0}</p>
+              <p className="text-sm font-medium text-gray-600">Pending</p>
+              <p className="text-2xl font-bold text-gray-900">{reportData?.overview?.pending || 0}</p>
             </div>
           </div>
         </Card>
@@ -248,7 +236,7 @@ const Reports = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Certificates Issued</p>
-              <p className="text-2xl font-bold text-gray-900">{reportData?.overview?.certificate_issued || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{reportData?.overview?.certificates_issued || 0}</p>
             </div>
           </div>
         </Card>
@@ -306,17 +294,17 @@ const Reports = () => {
           </Card.Content>
         </Card>
 
-        {/* Applications by Province */}
+        {/* Nationality Distribution */}
         <Card>
           <Card.Header>
-            <h3 className="text-lg font-semibold">Applications by Province</h3>
+            <h3 className="text-lg font-semibold">Applications by Nationality</h3>
           </Card.Header>
           <Card.Content>
-            {reportData?.province_distribution ? (
+            {reportData?.nationality_distribution ? (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={reportData.province_distribution}>
+                <BarChart data={reportData.nationality_distribution}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="province" angle={-45} textAnchor="end" height={80} />
+                  <XAxis dataKey="nationality" angle={-45} textAnchor="end" height={80} />
                   <YAxis />
                   <Tooltip />
                   <Bar dataKey="count" fill="#3B82F6" />
@@ -383,34 +371,7 @@ const Reports = () => {
       </div>
 
       {/* Charts - Third Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Applications by District (Top 10) */}
-        <Card>
-          <Card.Header>
-            <div className="flex items-center space-x-2">
-              <MapPinIcon className="h-5 w-5 text-indigo-600" />
-              <h3 className="text-lg font-semibold">Top Districts by Applications</h3>
-            </div>
-          </Card.Header>
-          <Card.Content>
-            {reportData?.district_distribution ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={reportData.district_distribution.slice(0, 10)} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="district" type="category" width={80} />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#8B5CF6" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-300 flex items-center justify-center text-gray-500">
-                Loading data...
-              </div>
-            )}
-          </Card.Content>
-        </Card>
-
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
         {/* Applications by Age Group */}
         <Card>
           <Card.Header>
@@ -428,43 +389,6 @@ const Reports = () => {
                   <YAxis />
                   <Tooltip />
                   <Bar dataKey="count" fill="#EC4899" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-300 flex items-center justify-center text-gray-500">
-                Loading data...
-              </div>
-            )}
-          </Card.Content>
-        </Card>
-      </div>
-
-      {/* Charts - Fourth Row */}
-      <div className="grid grid-cols-1 gap-8 mb-8">
-        {/* Application Progress Distribution */}
-        <Card>
-          <Card.Header>
-            <div className="flex items-center space-x-2">
-              <ClockIcon className="h-5 w-5 text-green-600" />
-              <h3 className="text-lg font-semibold">Application Progress Distribution</h3>
-            </div>
-          </Card.Header>
-          <Card.Content>
-            {reportData?.progress_distribution ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={reportData.progress_distribution}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="progress_range" />
-                  <YAxis label={{ value: 'Number of Applications', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip formatter={(value) => [`${value}`, 'Applications']} />
-                  <Bar dataKey="count" fill="#06B6D4">
-                    {reportData.progress_distribution.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={getProgressColor(parseInt(entry.progress_range.split('-')[1]) || 0)} 
-                      />
-                    ))}
-                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -541,14 +465,14 @@ const Reports = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <Button
               variant="outline"
               className="p-4 h-auto flex flex-col items-center space-y-2"
               onClick={() => {
                 setReportParams({
                   ...reportParams,
-                  reportType: 'processing',
+                  reportType: 'analytics',
                   startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                   endDate: new Date().toISOString().split('T')[0],
                   format: 'excel'
@@ -557,7 +481,7 @@ const Reports = () => {
               }}
             >
               <ClockIcon className="h-8 w-8 text-yellow-600" />
-              <span className="font-medium">Processing Efficiency</span>
+              <span className="font-medium">Processing Analysis</span>
               <span className="text-sm text-gray-500">Review time analysis</span>
             </Button>
             
@@ -578,25 +502,6 @@ const Reports = () => {
               <UserGroupIcon className="h-8 w-8 text-indigo-600" />
               <span className="font-medium">Demographic Report</span>
               <span className="text-sm text-gray-500">Applicant demographics</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              className="p-4 h-auto flex flex-col items-center space-y-2"
-              onClick={() => {
-                setReportParams({
-                  ...reportParams,
-                  reportType: 'geographic',
-                  startDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                  endDate: new Date().toISOString().split('T')[0],
-                  format: 'excel'
-                });
-                handleGenerateReport();
-              }}
-            >
-              <MapPinIcon className="h-8 w-8 text-green-600" />
-              <span className="font-medium">Geographic Distribution</span>
-              <span className="text-sm text-gray-500">Province & district analysis</span>
             </Button>
           </div>
         </Card.Content>

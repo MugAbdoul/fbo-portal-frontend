@@ -231,7 +231,7 @@ const Applications = () => {
         
         <Card className="p-4 text-center">
           <div className="text-2xl font-bold text-orange-600">{stats.missingDocs}</div>
-          <div className="text-sm text-gray-500">Missing Docs</div>
+          <div className="text-sm text-gray-500">Reviewing Again</div>
         </Card>
         
         <Card className="p-4 text-center">

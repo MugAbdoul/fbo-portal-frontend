@@ -307,6 +307,25 @@ const AdminApplicationDetails = () => {
     }
   };
 
+  // Add this function to your component
+  const viewDocument = async (documentId) => {
+    try {
+      const response = await fetch(`/api/documents/${documentId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to view document');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      toast.error('Failed to view document');
+    }
+  };
+
   if (loading || !currentApplication) {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -636,10 +655,11 @@ const AdminApplicationDetails = () => {
                           <ArrowDownTrayIcon className="h-4 w-4" />
                           <span>Download</span>
                         </Button>
-                        
+                      
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => viewDocument(req.document_id)}
                           className="flex items-center space-x-1"
                         >
                           <EyeIcon className="h-4 w-4" />

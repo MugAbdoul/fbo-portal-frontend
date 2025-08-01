@@ -195,7 +195,7 @@ const Dashboard = () => {
 
           <Card className="p-6 text-center">
             <div className="text-3xl font-bold text-orange-600">{stats.missingDocs}</div>
-            <div className="text-sm text-gray-600 mt-1">Missing Documents</div>
+            <div className="text-sm text-gray-600 mt-1">Reviewing Again</div>
           </Card>
           
           <Card className="p-6 text-center">

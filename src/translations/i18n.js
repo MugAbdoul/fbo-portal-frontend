@@ -59,7 +59,7 @@ const resources = {
       'status.underReview': 'Under Review',
       'status.approved': 'Approved',
       'status.rejected': 'Rejected',
-      'status.missingDocuments': 'Missing Documents',
+      'status.missingDocuments': 'Reviewing Again',
       
       // Error messages
       'error.required': 'This field is required',
