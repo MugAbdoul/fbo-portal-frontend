@@ -75,6 +75,7 @@ const NewApplication = () => {
   const [availableDistricts, setAvailableDistricts] = useState([]);
   const [documents, setDocuments] = useState({});
   const [documentErrors, setDocumentErrors] = useState({});
+  const [manualSubmit, setManualSubmit] = useState(false); // Add this state to track manual submission
   const formRef = useRef(null);
   
   const {
@@ -188,22 +189,29 @@ const NewApplication = () => {
     return isValid;
   };
 
-// In your NewApplication component
-const onSubmit = async (data) => {
-  try {
-    // Create a data object that separates form fields from files
-    const submitData = {
-      ...data,
-      files: documents  // Pass the documents separately
-    };
+  // Modified onSubmit function to check for manual submission
+  const onSubmit = async (data) => {
+    // Only proceed if the manual submit button was clicked
+    if (!manualSubmit) {
+      return; // This prevents auto-submission
+    }
     
-    const result = await dispatch(createApplication(submitData)).unwrap();
-    toast.success('Application created successfully!');
-    navigate(`/applicant/applications/${result.application.id}`);
-  } catch (error) {
-    toast.error(error.error || 'Failed to create application');
-  }
-};
+    try {
+      // Create a data object that separates form fields from files
+      const submitData = {
+        ...data,
+        files: documents  // Pass the documents separately
+      };
+      
+      const result = await dispatch(createApplication(submitData)).unwrap();
+      toast.success('Application created successfully!');
+      navigate(`/applicant/applications/${result.application.id}`);
+    } catch (error) {
+      toast.error(error.error || 'Failed to create application');
+    } finally {
+      setManualSubmit(false); // Reset the manual submit flag
+    }
+  };
 
   const nextStep = async () => {
     let fieldsToValidate = [];
@@ -238,6 +246,17 @@ const onSubmit = async (data) => {
 
   const prevStep = () => {
     setStep(step - 1);
+  };
+
+  // Handle the manual submit button click
+  const handleManualSubmit = (e) => {
+    e.preventDefault(); // Prevent default form submission
+    setManualSubmit(true); // Set the flag to true
+    
+    // Manually trigger form submission
+    if (formRef.current) {
+      formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
   };
 
   const steps = [
@@ -311,6 +330,7 @@ const onSubmit = async (data) => {
         </nav>
       </div>
 
+      {/* Use onSubmit={handleSubmit(onSubmit)} for the form submission handler */}
       <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
         <Card>
           <Card.Content className="p-8">
@@ -708,7 +728,10 @@ const onSubmit = async (data) => {
                   Next
                 </Button>
               ) : (
-                <Button type="submit" loading={loading}>
+                // Use onClick instead of type="submit" to handle the submission manually
+                <Button 
+                  onClick={handleManualSubmit} 
+                  loading={loading}>
                   Submit Application
                 </Button>
               )}
