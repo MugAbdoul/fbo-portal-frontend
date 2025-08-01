@@ -135,7 +135,7 @@ const MyApplications = () => {
         ['PENDING', 'FBO_REVIEW', 'TRANSFER_TO_DM', 'DM_REVIEW', 'TRANSFER_TO_HOD', 
          'HOD_REVIEW', 'TRANSFER_TO_SG', 'SG_REVIEW', 'TRANSFER_TO_CEO', 'CEO_REVIEW'].includes(app.status)
       ).length,
-      approved: applications.filter(app => app.status === 'APPROVED').length,
+      approved: applications.filter(app => (app.status === 'APPROVED' || app.status === 'CERTIFICATE_ISSUED')).length,
       certificateIssued: applications.filter(app => app.status === 'CERTIFICATE_ISSUED').length,
       rejected: applications.filter(app => app.status === 'REJECTED').length,
       missingDocs: applications.filter(app => app.status === 'REVIEWING_AGAIN').length,
