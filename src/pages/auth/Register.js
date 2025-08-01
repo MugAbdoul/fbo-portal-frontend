@@ -39,16 +39,6 @@ const Register = () => {
     dispatch(registerUser(data));
   };
 
-  const titleOptions = [
-    { value: 'Mr', label: 'Mr.' },
-    { value: 'Mrs', label: 'Mrs.' },
-    { value: 'Ms', label: 'Ms.' },
-    { value: 'Dr', label: 'Dr.' },
-    { value: 'Rev', label: 'Rev.' },
-    { value: 'Pastor', label: 'Pastor' },
-    { value: 'Bishop', label: 'Bishop' },
-  ];
-
   const genderOptions = [
     { value: 'MALE', label: 'Male' },
     { value: 'FEMALE', label: 'Female' },
@@ -78,30 +68,19 @@ const Register = () => {
       </div>
 
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <Select
-            label="Title"
-            required
-            options={titleOptions}
-            {...register('title', {
-              required: 'Title is required',
-            })}
-            error={errors.title?.message}
-          />
 
-          <Input
-            label="First Name"
-            required
-            {...register('firstname', {
-              required: 'First name is required',
-              minLength: {
-                value: 2,
-                message: 'First name must be at least 2 characters',
-              },
-            })}
-            error={errors.firstname?.message}
-          />
-        </div>
+        <Input
+          label="First Name"
+          required
+          {...register('firstname', {
+            required: 'First name is required',
+            minLength: {
+              value: 2,
+              message: 'First name must be at least 2 characters',
+            },
+          })}
+          error={errors.firstname?.message}
+        />
 
         <Input
           label="Last Name"
@@ -133,30 +112,32 @@ const Register = () => {
         <Input
           label="Phone Number"
           type="tel"
-          placeholder="+250XXXXXXXXX"
+          placeholder="+2507XXXXXXXX"
           required
           {...register('phonenumber', {
             required: 'Phone number is required',
             pattern: {
-              value: /^\+?[1-9]\d{1,14}$/,
-              message: 'Invalid phone number format',
+              value: /^\+250\d{9}$/,
+              message: 'Phone number must start with +250 and be 12 digits total',
             },
           })}
           error={errors.phonenumber?.message}
         />
 
+
         <Input
-          label="National ID or Passport Number"
+          label="National ID"
           required
           {...register('nid_or_passport', {
-            required: 'National ID or Passport is required',
-            minLength: {
-              value: 6,
-              message: 'Must be at least 6 characters',
+            required: 'National ID is required',
+            pattern: {
+              value: /^\d{16}$/,
+              message: 'NID must be exactly 16 digits',
             },
           })}
           error={errors.nid_or_passport?.message}
         />
+
 
         <Input
           label="Nationality"

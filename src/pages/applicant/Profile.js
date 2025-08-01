@@ -68,16 +68,6 @@ const Profile = () => {
     }
   };
 
-  const titleOptions = [
-    { value: 'Mr', label: 'Mr.' },
-    { value: 'Mrs', label: 'Mrs.' },
-    { value: 'Ms', label: 'Ms.' },
-    { value: 'Dr', label: 'Dr.' },
-    { value: 'Rev', label: 'Rev.' },
-    { value: 'Pastor', label: 'Pastor' },
-    { value: 'Bishop', label: 'Bishop' },
-  ];
-
   const tabs = [
     { id: 'profile', name: 'Profile Information', icon: UserIcon },
     { id: 'security', name: 'Security', icon: LockClosedIcon },
@@ -129,28 +119,17 @@ const Profile = () => {
               </Card.Header>
               <Card.Content>
                 <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Select
-                      label="Title"
-                      options={titleOptions}
-                      {...registerProfile('title', {
-                        required: 'Title is required',
-                      })}
-                      error={profileErrors.title?.message}
-                    />
-
-                    <Input
-                      label="First Name"
-                      {...registerProfile('firstname', {
-                        required: 'First name is required',
-                        minLength: {
-                          value: 2,
-                          message: 'First name must be at least 2 characters',
-                        },
-                      })}
-                      error={profileErrors.firstname?.message}
-                    />
-                  </div>
+                  <Input
+                    label="First Name"
+                    {...registerProfile('firstname', {
+                      required: 'First name is required',
+                      minLength: {
+                        value: 2,
+                        message: 'First name must be at least 2 characters',
+                      },
+                    })}
+                    error={profileErrors.firstname?.message}
+                  />
 
                   <Input
                     label="Last Name"

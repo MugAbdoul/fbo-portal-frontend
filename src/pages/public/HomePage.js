@@ -78,9 +78,9 @@ const HomePage = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                Church Authorization 
-                <span className="block text-blue-200">Made Simple</span>
+              <h1 className="text-5xl lg:text-5xl font-bold leading-tight">
+                Church Monitoring and 
+                <span className="block text-blue-200">Management System</span>
               </h1>
               <p className="text-xl text-blue-100 leading-relaxed">
                 The official digital platform for religious organizations to obtain 

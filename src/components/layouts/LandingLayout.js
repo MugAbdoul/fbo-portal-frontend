@@ -11,6 +11,25 @@ import {
 import clsx from 'clsx';
 
 
+const FacebookIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+  <path d="M22.675 0h-21.35C.597 0 0 .598 0 1.333v21.333C0 23.402.597 24 1.325 24h11.483v-9.294H9.692v-3.622h3.116V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.794.143v3.24l-1.918.001c-1.504 0-1.794.715-1.794 1.763v2.31h3.588l-.467 3.622h-3.121V24h6.116c.728 0 1.324-.598 1.324-1.334V1.333C24 .598 23.403 0 22.675 0z"/>
+</svg>
+);
+
+const XIcon = () => (
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+  <path d="M22.25 0h-4.58L12 9.08 6.33 0H0l8.77 13.09L0 24h4.63l6.97-10.39L17.7 24H24l-9.16-13.82L22.25 0z"/>
+</svg>
+);
+
+const LinkedinIcon = () => (
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+  <path d="M4.98 3.5C4.98 5 3.9 6 2.48 6h-.02C1.02 6 0 5 0 3.5S1.02 1 2.46 1c1.44 0 2.52 1 2.52 2.5zM.5 24h4V7.98h-4V24zM8.98 7.98H5v16.02h4v-8.53c0-2.08.57-3.5 2.97-3.5 2.35 0 2.38 2.2 2.38 3.63V24h4V15.6c0-4.36-2.33-6.38-5.44-6.38-2.52 0-3.62 1.38-4.23 2.35h.05V7.98z"/>
+</svg>
+
+);
+
 const LandingLayout = () => {
   const location = useLocation();
 
@@ -20,6 +39,14 @@ const LandingLayout = () => {
     { name: 'About', href: '/about', icon: InformationCircleIcon },
     { name: 'FAQ', href: '/faq', icon: QuestionMarkCircleIcon },
   ];
+
+
+
+const socialMedia = [
+  { name: 'Facebook', href: 'https://facebook.com/rgbrwanda', icon: FacebookIcon },
+  { name: 'X', href: 'https://x.com/rgbrwanda', icon: XIcon },
+  { name: 'LinkedIn', href: 'https://linkedin.com/company/rgbrwanda', icon: LinkedinIcon },
+];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -40,7 +67,7 @@ const LandingLayout = () => {
                 />
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">RGB</h1>
-                  <p className="text-xs text-gray-600">Church Authorization Portal</p>
+                  <p className="text-xs text-gray-600">Church Monitoring Portal</p>
                 </div>
               </Link>
             </div>
@@ -159,6 +186,26 @@ const LandingLayout = () => {
                 <p>Kigali, Rwanda</p>
                 <p>Phone: +250 788 123 456</p>
                 <p>Email: info@rgb.gov.rw</p>
+                
+                {/* Social Media Links */}
+                <div className="mt-4">
+                  <h5 className="text-sm font-semibold mb-2">Follow Us</h5>
+                  <div className="flex space-x-4">
+                    {socialMedia.map(({ name, href, icon: Icon }) => (
+                      <a
+                        key={name}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-300 hover:text-white transition-colors"
+                        aria-label={`Follow us on ${name}`}
+                      >
+                        <Icon className="h-2 w-2" />
+                      </a>
+                    ))}
+
+                  </div>
+                </div>
               </div>
             </div>
           </div>

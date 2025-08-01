@@ -8,6 +8,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   EyeIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -47,7 +48,7 @@ const AdminDashboard = () => {
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'REJECTED':
         return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
-      case 'MISSING_DOCUMENTS':
+      case 'PASTOR_DOCUMENT':
         return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
       default:
         return <ClockIcon className="h-5 w-5 text-blue-500" />;
@@ -61,7 +62,7 @@ const AdminDashboard = () => {
         return 'text-green-700 bg-green-100';
       case 'REJECTED':
         return 'text-red-700 bg-red-100';
-      case 'MISSING_DOCUMENTS':
+      case 'PASTOR_DOCUMENT':
         return 'text-yellow-700 bg-yellow-100';
       default:
         return 'text-blue-700 bg-blue-100';
@@ -72,15 +73,40 @@ const AdminDashboard = () => {
     return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  const getStatusProgress = (status) => {
+    const progressMap = {
+      'PENDING': 10,
+      'FBO_REVIEW': 20,
+      'PASTOR_DOCUMENT': 15,
+      'TRANSFER_TO_DM': 30,
+      'DM_REVIEW': 35,
+      'TRANSFER_TO_HOD': 45,
+      'HOD_REVIEW': 50,
+      'TRANSFER_TO_SG': 60,
+      'SG_REVIEW': 65,
+      'TRANSFER_TO_CEO': 75,
+      'CEO_REVIEW': 80,
+      'APPROVED': 90,
+      'CERTIFICATE_ISSUED': 100,
+      'REJECTED': 0
+    };
+    return progressMap[status] || 0;
+  };
+
   // Prepare chart data
   const statusData = stats?.by_status ? Object.entries(stats.by_status).map(([status, count]) => ({
     name: formatStatus(status),
     value: count,
+  })).filter(item => item.value > 0) : [];
+
+  const monthlyData = stats?.monthly ? stats.monthly.map(item => ({
+    ...item,
+    monthName: new Date(item.year, item.month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
   })) : [];
 
-  const monthlyData = stats?.monthly || [];
+  const districtData = stats?.by_district ? stats.by_district.slice(0, 10) : []; // Top 10 districts
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316', '#84CC16'];
 
   // Quick stats for the current user's role
   const getQuickStats = () => {
@@ -88,8 +114,8 @@ const AdminDashboard = () => {
 
     const baseStats = [
       {
-        name: 'Pending Review',
-        value: stats.pending_review || 0,
+        name: 'Pending My Action',
+        value: stats.pending_my_action || 0,
         icon: ClockIcon,
         color: 'text-blue-600',
         bgColor: 'bg-blue-100',
@@ -108,17 +134,17 @@ const AdminDashboard = () => {
         ...baseStats,
         {
           name: 'Approved',
-          value: stats.approved || 0,
+          value: stats.approved + stats.certificate_issued || 0,
           icon: CheckCircleIcon,
           color: 'text-green-600',
           bgColor: 'bg-green-100',
         },
         {
-          name: 'Rejected',
-          value: stats.rejected || 0,
-          icon: ExclamationTriangleIcon,
-          color: 'text-red-600',
-          bgColor: 'bg-red-100',
+          name: 'Certificates Issued',
+          value: stats.certificate_issued || 0,
+          icon: CheckCircleIcon,
+          color: 'text-green-700',
+          bgColor: 'bg-green-200',
         },
       ];
     }
@@ -204,10 +230,30 @@ const AdminDashboard = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="monthName" />
                   <YAxis />
                   <Tooltip />
                   <Bar dataKey="count" fill="#3B82F6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* Applications by District Chart */}
+        {user?.role === 'CEO' && districtData.length > 0 && (
+          <Card className="lg:col-span-2">
+            <Card.Header>
+              <h3 className="text-lg font-semibold">Applications by District (Top 10)</h3>
+            </Card.Header>
+            <Card.Content>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={districtData} layout="horizontal">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="district" type="category" width={100} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#10B981" />
                 </BarChart>
               </ResponsiveContainer>
             </Card.Content>
@@ -257,10 +303,13 @@ const AdminDashboard = () => {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Submitted
+                      Progress
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Risk Score
+                      Location
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Submitted
                     </th>
                     <th className="relative px-6 py-3">
                       <span className="sr-only">Actions</span>
@@ -268,65 +317,108 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {applications.slice(0, 5).map((application) => (
-                    <tr key={application.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {application.organization_name}
-                          </div>
-                          {application.acronym && (
-                            <div className="text-sm text-gray-500">
-                              ({application.acronym})
+                  {applications.slice(0, 5).map((application) => {
+                    const progress = getStatusProgress(application.status);
+                    
+                    return (
+                      <tr key={application.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {application.organization_name}
                             </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {application.applicant?.firstname} {application.applicant?.lastname}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {application.applicant?.email}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(application.status)}
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-                            {formatStatus(application.status)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(application.submitted_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {application.risk_score?.toFixed(1)}%
-                        </div>
-                        <div className={`text-xs ${
-                          application.risk_score > 70 ? 'text-red-600' :
-                          application.risk_score > 40 ? 'text-yellow-600' : 'text-green-600'
-                        }`}>
-                          {application.risk_score > 70 ? 'High' :
-                           application.risk_score > 40 ? 'Medium' : 'Low'} Risk
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Link to={`/admin/applications/${application.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="flex items-center space-x-1"
-                          >
-                            <EyeIcon className="h-4 w-4" />
-                            <span>View</span>
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                            {application.acronym && (
+                              <div className="text-sm text-gray-500">
+                                ({application.acronym})
+                              </div>
+                            )}
+                            {application.certificate_number && (
+                              <div className="text-xs text-green-600 font-medium">
+                                #{application.certificate_number}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {application.applicant?.firstname} {application.applicant?.lastname}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {application.applicant?.email}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(application.status)}
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                              {formatStatus(application.status)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  application.status === 'REJECTED' ? 'bg-red-500' :
+                                  application.status === 'CERTIFICATE_ISSUED' ? 'bg-green-500' :
+                                  'bg-blue-500'
+                                }`}
+                                style={{ width: `${progress}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs text-gray-500">{progress}%</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-1 text-sm text-gray-900">
+                            <MapPinIcon className="h-4 w-4 text-gray-400" />
+                            <div>
+                              <div>{application.district?.name || 'N/A'}</div>
+                              <div className="text-xs text-gray-500">
+                                {application.district?.province?.name || 'N/A'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div>{new Date(application.submitted_at).toLocaleDateString()}</div>
+                          <div className="text-xs text-gray-400">
+                            {new Date(application.submitted_at).toLocaleTimeString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {
+                              application.canEdit ?
+                              (
+                                <Link to={`/admin/applications/${application.id}`}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="flex items-center space-x-1"
+                                  >
+                                    <EyeIcon className="h-4 w-4" />
+                                    <span>Review</span>
+                                  </Button>
+                                </Link>
+                              ) :
+
+                              (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="flex items-center space-x-1"
+                                    disabled={true}
+                                  >
+                                    <EyeIcon className="h-4 w-4" />
+                                    <span>Review</span>
+                                  </Button>
+                              )
+                            }
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

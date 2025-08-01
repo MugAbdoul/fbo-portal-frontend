@@ -18,7 +18,7 @@ export const register = createAsyncThunk(
       const response = await api.post('/auth/register', userData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Registration failed' });
     }
   }
 );
@@ -30,7 +30,7 @@ export const login = createAsyncThunk(
       const response = await api.post('/auth/login', credentials);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error?.response?.data || { error: 'Login failed' });
     }
   }
 );
@@ -59,7 +59,7 @@ export const updateProfile = createAsyncThunk(
       const response = await api.put('/auth/profile', profileData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Profile update failed' });
     }
   }
 );
@@ -71,7 +71,7 @@ export const changePassword = createAsyncThunk(
       const response = await api.post('/auth/change-password', passwordData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Password change failed' });
     }
   }
 );
@@ -113,11 +113,13 @@ const authSlice = createSlice({
         state.token = action.payload.access_token;
         state.isAuthenticated = true;
         state.userType = 'applicant';
+        state.error = null;
         localStorage.setItem('token', action.payload.access_token);
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.error || 'Registration failed';
+        state.error = action.payload?.error || action.payload?.message || 'Registration failed';
+        state.isAuthenticated = false;
       })
       // Login
       .addCase(login.pending, (state) => {
@@ -130,11 +132,13 @@ const authSlice = createSlice({
         state.token = action.payload.access_token;
         state.isAuthenticated = true;
         state.userType = action.payload.user_type;
+        state.error = null;
         localStorage.setItem('token', action.payload.access_token);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.error || 'Login failed';
+        state.error = action.payload?.error || action.payload?.message || 'Login failed';
+        state.isAuthenticated = false;
       })
       // Check Auth
       .addCase(checkAuth.pending, (state) => {
@@ -144,6 +148,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
+        state.error = null;
         // Determine user type from user data
         state.userType = action.payload.user.role ? 'admin' : 'applicant';
       })
@@ -157,6 +162,17 @@ const authSlice = createSlice({
       // Update Profile
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.user = action.payload.user;
+        state.error = null;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.error = action.payload?.error || action.payload?.message || 'Profile update failed';
+      })
+      // Change Password
+      .addCase(changePassword.fulfilled, (state) => {
+        state.error = null;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.error = action.payload?.error || action.payload?.message || 'Password change failed';
       });
   },
 });

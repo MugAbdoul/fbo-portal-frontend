@@ -17,7 +17,13 @@ const Login = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    mode: 'onBlur', // Only validate on blur to prevent unnecessary re-renders
+  });
 
   const from = location.state?.from?.pathname || 
     (userType === 'admin' ? '/admin/dashboard' : '/applicant/dashboard');
@@ -31,7 +37,11 @@ const Login = () => {
   useEffect(() => {
     if (error) {
       toast.error(error);
-      dispatch(clearError());
+      // Clear error after showing toast, with a small delay to prevent conflicts
+      const timer = setTimeout(() => {
+        dispatch(clearError());
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [error, dispatch]);
 

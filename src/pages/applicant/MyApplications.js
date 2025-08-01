@@ -9,6 +9,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   DocumentIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -33,7 +34,7 @@ const MyApplications = () => {
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'REJECTED':
         return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
-      case 'MISSING_DOCUMENTS':
+      case 'PASTOR_DOCUMENT':
         return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
       default:
         return <ClockIcon className="h-5 w-5 text-blue-500" />;
@@ -47,7 +48,7 @@ const MyApplications = () => {
         return 'text-green-700 bg-green-100 border-green-200';
       case 'REJECTED':
         return 'text-red-700 bg-red-100 border-red-200';
-      case 'MISSING_DOCUMENTS':
+      case 'PASTOR_DOCUMENT':
         return 'text-yellow-700 bg-yellow-100 border-yellow-200';
       default:
         return 'text-blue-700 bg-blue-100 border-blue-200';
@@ -58,10 +59,24 @@ const MyApplications = () => {
     return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const getRiskLevel = (score) => {
-    if (score > 70) return { level: 'High', color: 'text-red-600' };
-    if (score > 40) return { level: 'Medium', color: 'text-yellow-600' };
-    return { level: 'Low', color: 'text-green-600' };
+  const getStatusProgress = (status) => {
+    const progressMap = {
+      'PENDING': 10,
+      'FBO_REVIEW': 20,
+      'PASTOR_DOCUMENT': 15,
+      'TRANSFER_TO_DM': 30,
+      'DM_REVIEW': 35,
+      'TRANSFER_TO_HOD': 45,
+      'HOD_REVIEW': 50,
+      'TRANSFER_TO_SG': 60,
+      'SG_REVIEW': 65,
+      'TRANSFER_TO_CEO': 75,
+      'CEO_REVIEW': 80,
+      'APPROVED': 90,
+      'CERTIFICATE_ISSUED': 100,
+      'REJECTED': 0
+    };
+    return progressMap[status] || 0;
   };
 
   // Filter and sort applications
@@ -90,12 +105,15 @@ const MyApplications = () => {
   const statusOptions = [
     { value: '', label: 'All Statuses' },
     { value: 'PENDING', label: 'Pending' },
-    { value: 'UNDER_REVIEW', label: 'Under Review' },
-    { value: 'MISSING_DOCUMENTS', label: 'Missing Documents' },
-    { value: 'DRAFT', label: 'Draft' },
+    { value: 'FBO_REVIEW', label: 'FBO Review' },
+    { value: 'PASTOR_DOCUMENT', label: 'Missing Documents' },
+    { value: 'TRANSFER_TO_DM', label: 'Transfer to DM' },
     { value: 'DM_REVIEW', label: 'DM Review' },
+    { value: 'TRANSFER_TO_HOD', label: 'Transfer to HOD' },
     { value: 'HOD_REVIEW', label: 'HOD Review' },
+    { value: 'TRANSFER_TO_SG', label: 'Transfer to SG' },
     { value: 'SG_REVIEW', label: 'SG Review' },
+    { value: 'TRANSFER_TO_CEO', label: 'Transfer to CEO' },
     { value: 'CEO_REVIEW', label: 'CEO Review' },
     { value: 'APPROVED', label: 'Approved' },
     { value: 'REJECTED', label: 'Rejected' },
@@ -108,6 +126,24 @@ const MyApplications = () => {
     { value: 'name', label: 'Organization Name' },
     { value: 'status', label: 'Status' },
   ];
+
+  // Get statistics for the dashboard
+  const getStats = () => {
+    const stats = {
+      total: applications.length,
+      pending: applications.filter(app => 
+        ['PENDING', 'FBO_REVIEW', 'TRANSFER_TO_DM', 'DM_REVIEW', 'TRANSFER_TO_HOD', 
+         'HOD_REVIEW', 'TRANSFER_TO_SG', 'SG_REVIEW', 'TRANSFER_TO_CEO', 'CEO_REVIEW'].includes(app.status)
+      ).length,
+      approved: applications.filter(app => app.status === 'APPROVED').length,
+      certificateIssued: applications.filter(app => app.status === 'CERTIFICATE_ISSUED').length,
+      rejected: applications.filter(app => app.status === 'REJECTED').length,
+      missingDocs: applications.filter(app => app.status === 'PASTOR_DOCUMENT').length,
+    };
+    return stats;
+  };
+
+  const stats = getStats();
 
   if (loading) {
     return (
@@ -133,6 +169,41 @@ const MyApplications = () => {
           View and manage all your organization authorization applications
         </p>
       </div>
+
+      {/* Statistics Cards */}
+      {applications.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+            <div className="text-sm text-gray-500">Total</div>
+          </Card>
+          
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
+            <div className="text-sm text-gray-500">In Review</div>
+          </Card>
+          
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-yellow-600">{stats.missingDocs}</div>
+            <div className="text-sm text-gray-500">Missing Docs</div>
+          </Card>
+          
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+            <div className="text-sm text-gray-500">Approved</div>
+          </Card>
+          
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-700">{stats.certificateIssued}</div>
+            <div className="text-sm text-gray-500">Certified</div>
+          </Card>
+          
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+            <div className="text-sm text-gray-500">Rejected</div>
+          </Card>
+        </div>
+      )}
 
       {/* Filters and Search */}
       <Card className="mb-6">
@@ -166,7 +237,6 @@ const MyApplications = () => {
                 New Application
               </Button>
             </Link>
-            
           </div>
         </Card.Content>
       </Card>
@@ -199,7 +269,7 @@ const MyApplications = () => {
       ) : (
         <div className="space-y-4">
           {filteredApplications.map((application) => {
-            const riskInfo = getRiskLevel(application.risk_score);
+            const progress = getStatusProgress(application.status);
             
             return (
               <Card key={application.id} className="hover:shadow-md transition-shadow">
@@ -218,9 +288,14 @@ const MyApplications = () => {
                             #{application.certificate_number}
                           </span>
                         )}
+                        {application.canEdit && (
+                          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
+                            Editable
+                          </span>
+                        )}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                         <div>
                           <span className="font-medium">Submitted:</span>{' '}
                           {new Date(application.submitted_at).toLocaleDateString()}
@@ -229,18 +304,41 @@ const MyApplications = () => {
                           <span className="font-medium">Last Modified:</span>{' '}
                           {new Date(application.last_modified).toLocaleDateString()}
                         </div>
-                        <div>
-                          <span className="font-medium">Risk Score:</span>{' '}
-                          <span className={riskInfo.color}>
-                            {application.risk_score?.toFixed(1)}% ({riskInfo.level})
+                        <div className="flex items-center space-x-1">
+                          <MapPinIcon className="h-4 w-4 text-gray-400" />
+                          <span>
+                            {application.district?.name || 'N/A'}, {application.district?.province?.name || 'N/A'}
                           </span>
                         </div>
                       </div>
+
+                      {/* Progress Bar */}
+                      <div className="mb-3">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-medium text-gray-700">Progress</span>
+                          <span className="text-xs text-gray-500">{progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              application.status === 'REJECTED' ? 'bg-red-500' :
+                              application.status === 'CERTIFICATE_ISSUED' ? 'bg-green-500' :
+                              'bg-blue-500'
+                            }`}
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
                       
-                      {application.comments && (
+                      {/* Show latest comment if available */}
+                      {application.comments && application.comments.length > 0 && (
                         <div className="mt-3 p-3 bg-gray-50 rounded-md">
                           <p className="text-sm text-gray-700">
-                            <span className="font-medium">Latest comment:</span> {application.comments}
+                            <span className="font-medium">Latest update:</span> {application.comments[0]?.content}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {application.comments[0]?.performed_by?.firstname} {application.comments[0]?.performed_by?.lastname} • {' '}
+                            {new Date(application.comments[0]?.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       )}
@@ -256,9 +354,7 @@ const MyApplications = () => {
                         </div>
                       </div>
                       
-                      <Link
-                        to={`/applicant/applications/${application.id}`}
-                      >
+                      <Link to={`/applicant/applications/${application.id}`}>
                         <Button
                           variant="outline"
                           size="sm"
@@ -268,7 +364,6 @@ const MyApplications = () => {
                           <span>View</span>
                         </Button>
                       </Link>
-                      
                     </div>
                   </div>
                 </Card.Content>

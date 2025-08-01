@@ -50,7 +50,7 @@ export const getStatusColor = (status) => {
   const colors = {
     [APPLICATION_STATUS.PENDING]: 'blue',
     [APPLICATION_STATUS.UNDER_REVIEW]: 'blue',
-    [APPLICATION_STATUS.MISSING_DOCUMENTS]: 'yellow',
+    [APPLICATION_STATUS.PASTOR_DOCUMENT]: 'yellow',
     [APPLICATION_STATUS.DRAFT]: 'blue',
     [APPLICATION_STATUS.DM_REVIEW]: 'blue',
     [APPLICATION_STATUS.HOD_REVIEW]: 'blue',

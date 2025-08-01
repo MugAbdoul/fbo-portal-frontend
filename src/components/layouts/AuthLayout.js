@@ -29,7 +29,7 @@ const AuthLayout = () => {
             RGB Church Portal
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Religious Organization Authorization System
+            Religious Organization Monitoring System
           </p>
         </div>
       </div>

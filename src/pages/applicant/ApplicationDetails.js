@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { 
   getApplicationById, 
   getDocumentRequirements, 
-  uploadDocument 
+  uploadDocument,
+  getApplicationComments
 } from '../../redux/slices/applicationSlice';
 import {
   ArrowLeftIcon,
@@ -15,6 +16,7 @@ import {
   ClockIcon,
   EyeIcon,
   ArrowDownTrayIcon,
+  ChatBubbleLeftEllipsisIcon,
 } from '@heroicons/react/24/outline';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -26,7 +28,7 @@ const ApplicationDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentApplication, documentRequirements, loading } = useSelector(
+  const { currentApplication, documentRequirements, applicationComments, loading } = useSelector(
     (state) => state.applications
   );
   const [uploadingDoc, setUploadingDoc] = useState(null);
@@ -36,10 +38,11 @@ const ApplicationDetails = () => {
     if (id) {
       dispatch(getApplicationById(id));
       dispatch(getDocumentRequirements(id));
+      dispatch(getApplicationComments(id));
     }
   }, [dispatch, id]);
 
-    const downloadCertificate = async () => {
+  const downloadCertificate = async () => {
     try {
       const response = await api.post(`/certificates/generate/${id}`, {
         responseType: 'blob',
@@ -74,7 +77,6 @@ const ApplicationDetails = () => {
     }
   };
 
-
   const getStatusIcon = (status) => {
     switch (status) {
       case 'APPROVED':
@@ -82,7 +84,7 @@ const ApplicationDetails = () => {
         return <CheckCircleIcon className="h-8 w-8 text-green-500" />;
       case 'REJECTED':
         return <ExclamationTriangleIcon className="h-8 w-8 text-red-500" />;
-      case 'MISSING_DOCUMENTS':
+      case 'PASTOR_DOCUMENT':
         return <ExclamationTriangleIcon className="h-8 w-8 text-yellow-500" />;
       default:
         return <ClockIcon className="h-8 w-8 text-blue-500" />;
@@ -96,7 +98,7 @@ const ApplicationDetails = () => {
         return 'text-green-700 bg-green-100 border-green-200';
       case 'REJECTED':
         return 'text-red-700 bg-red-100 border-red-200';
-      case 'MISSING_DOCUMENTS':
+      case 'PASTOR_DOCUMENT':
         return 'text-yellow-700 bg-yellow-100 border-yellow-200';
       default:
         return 'text-blue-700 bg-blue-100 border-blue-200';
@@ -124,7 +126,7 @@ const ApplicationDetails = () => {
       toast.error(error.error || 'Failed to upload document');
     } finally {
       setUploadingDoc(null);
-      setSelectedDocType('')
+      setSelectedDocType('');
     }
   };
 
@@ -152,12 +154,6 @@ const ApplicationDetails = () => {
     }
   };
 
-  const getRiskLevel = (score) => {
-    if (score > 70) return { level: 'High', color: 'text-red-600' };
-    if (score > 40) return { level: 'Medium', color: 'text-yellow-600' };
-    return { level: 'Low', color: 'text-green-600' };
-  };
-
   if (loading || !currentApplication) {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -172,19 +168,22 @@ const ApplicationDetails = () => {
     );
   }
 
-  const riskInfo = getRiskLevel(currentApplication.risk_score);
-
-    const statusToStepIndex = {
+  // Updated status mapping for new workflow
+  const statusToStepIndex = {
     'PENDING': 1,
-    'UNDER_REVIEW': 1,
-    'MISSING_DOCUMENTS': 1,
-    'DRAFT': 2,
-    'DM_REVIEW': 3,
-    'HOD_REVIEW': 4,
-    'SG_REVIEW': 5,
-    'CEO_REVIEW': 6,
+    'FBO_REVIEW': 1,
+    'PASTOR_DOCUMENT': 1,
+    'TRANSFER_TO_DM': 2,
+    'DM_REVIEW': 2,
+    'TRANSFER_TO_HOD': 3,
+    'HOD_REVIEW': 3,
+    'TRANSFER_TO_SG': 4,
+    'SG_REVIEW': 4,
+    'TRANSFER_TO_CEO': 5,
+    'CEO_REVIEW': 5,
     'APPROVED': 6,
-    'CERTIFICATE_ISSUED': 7
+    'CERTIFICATE_ISSUED': 7,
+    'REJECTED': 0 // Special case for rejected
   };
 
   const currentStatusIndex = statusToStepIndex[currentApplication.status] ?? 0;
@@ -193,11 +192,16 @@ const ApplicationDetails = () => {
     { step: 'Application Submitted', status: currentStatusIndex > 0 ? 'completed' : 'current', role: 'Applicant' },
     { step: 'FBO Officer Review', status: currentStatusIndex > 1 ? 'completed' : currentStatusIndex === 1 ? 'current' : 'pending', role: 'FBO Officer' },
     { step: 'Division Manager Review', status: currentStatusIndex > 2 ? 'completed' : currentStatusIndex === 2 ? 'current' : 'pending', role: 'Division Manager' },
-    { step: 'HoD Review', status: currentStatusIndex > 3 ? 'completed' : currentStatusIndex === 3 ? 'current' : 'pending', role: 'Head of Department' },
+    { step: 'HOD Review', status: currentStatusIndex > 3 ? 'completed' : currentStatusIndex === 3 ? 'current' : 'pending', role: 'Head of Department' },
     { step: 'Secretary General Review', status: currentStatusIndex > 4 ? 'completed' : currentStatusIndex === 4 ? 'current' : 'pending', role: 'Secretary General' },
     { step: 'CEO Approval', status: currentStatusIndex > 5 ? 'completed' : currentStatusIndex === 5 ? 'current' : 'pending', role: 'CEO' },
     { step: 'Certificate Issued', status: currentStatusIndex === 7 ? 'completed' : 'pending', role: 'System' },
-  ]
+  ];
+
+  // Show rejected step if application is rejected
+  if (currentApplication.status === 'REJECTED') {
+    steps.push({ step: 'Application Rejected', status: 'rejected', role: 'System' });
+  }
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -272,9 +276,18 @@ const ApplicationDetails = () => {
                   <dd className="mt-1 text-sm text-gray-900">{currentApplication.organization_phone}</dd>
                 </div>
                 
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">Address</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{currentApplication.address}</dd>
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Province</dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    {currentApplication.district?.province?.name || 'N/A'}
+                  </dd>
+                </div>
+                
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">District</dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    {currentApplication.district?.name || 'N/A'}
+                  </dd>
                 </div>
                 
                 <div>
@@ -327,18 +340,6 @@ const ApplicationDetails = () => {
             </Card>
           )}
 
-          {/* Comments */}
-          {currentApplication.comments && (
-            <Card>
-              <Card.Header>
-                <h2 className="text-xl font-semibold">Latest Comments</h2>
-              </Card.Header>
-              <Card.Content>
-                <p className="text-gray-700">{currentApplication.comments}</p>
-              </Card.Content>
-            </Card>
-          )}
-
           {/* Document Requirements */}
           <Card>
             <Card.Header>
@@ -346,7 +347,7 @@ const ApplicationDetails = () => {
             </Card.Header>
             <Card.Content>
               <div className="space-y-6">
-                {documentRequirements.map((req) => (
+                {documentRequirements && documentRequirements.map((req) => (
                   <div key={req.document_type} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
@@ -409,15 +410,17 @@ const ApplicationDetails = () => {
                               <span>Download</span>
                             </Button>
 
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setSelectedDocType(req.document_type)}
-                              className="flex items-center space-x-1"
-                            >
-                              <CloudArrowUpIcon className="h-4 w-4" />
-                              <span>Replace</span>
-                            </Button>
+                            {currentApplication.canEdit && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedDocType(req.document_type)}
+                                className="flex items-center space-x-1"
+                              >
+                                <CloudArrowUpIcon className="h-4 w-4" />
+                                <span>Replace</span>
+                              </Button>
+                            )}
                           </div>
                         )}
 
@@ -432,36 +435,40 @@ const ApplicationDetails = () => {
 
                     ) : (
                       <div>
-                        {selectedDocType === req.document_type ? (
-                          <div className="space-y-4">
-                            <FileUpload
-                              onFilesSelect={(files) => handleFileUpload(files, req.document_type)}
-                              multiple={false}
-                              accept={{
-                                'application/pdf': ['.pdf'],
-                                'application/msword': ['.doc'],
-                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                                'image/jpeg': ['.jpg', '.jpeg'],
-                                'image/png': ['.png']
-                              }}
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedDocType('')}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={() => setSelectedDocType(req.document_type)}
-                            disabled={uploadingDoc === req.document_type}
-                            loading={uploadingDoc === req.document_type}
-                          >
-                            Upload Document
-                          </Button>
+                        {currentApplication.canEdit && (
+                          <>
+                            {selectedDocType === req.document_type ? (
+                              <div className="space-y-4">
+                                <FileUpload
+                                  onFilesSelect={(files) => handleFileUpload(files, req.document_type)}
+                                  multiple={false}
+                                  accept={{
+                                    'application/pdf': ['.pdf'],
+                                    'application/msword': ['.doc'],
+                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                                    'image/jpeg': ['.jpg', '.jpeg'],
+                                    'image/png': ['.png']
+                                  }}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setSelectedDocType('')}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => setSelectedDocType(req.document_type)}
+                                disabled={uploadingDoc === req.document_type}
+                                loading={uploadingDoc === req.document_type}
+                              >
+                                Upload Document
+                              </Button>
+                            )}
+                          </>
                         )}
                       </div>
                     )}
@@ -470,34 +477,50 @@ const ApplicationDetails = () => {
               </div>
             </Card.Content>
           </Card>
+
+          {/* Comments History */}
+          <Card>
+            <Card.Header>
+              <h2 className="text-xl font-semibold flex items-center space-x-2">
+                <ChatBubbleLeftEllipsisIcon className="h-5 w-5" />
+                <span>Comments & Updates</span>
+              </h2>
+            </Card.Header>
+            <Card.Content>
+              {applicationComments && applicationComments.length > 0 ? (
+                <div className="space-y-4">
+                  {applicationComments.map((comment) => (
+                    <div key={comment.id} className="border-l-4 border-blue-200 pl-4 py-2">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="text-sm font-medium text-gray-900">
+                          {comment.performed_by?.firstname} {comment.performed_by?.lastname}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(comment.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-1">
+                        {comment.performed_by?.role && (
+                          <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                            {formatStatus(comment.performed_by.role)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-700">
+                        {comment.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No comments or updates yet.</p>
+              )}
+            </Card.Content>
+          </Card>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Risk Assessment */}
-          <Card>
-            <Card.Header>
-              <h3 className="text-lg font-semibold">Risk Assessment</h3>
-            </Card.Header>
-            <Card.Content>
-              <div className="text-center">
-                <div className="text-3xl font-bold mb-2" style={{ color: riskInfo.color.replace('text-', '') }}>
-                  {currentApplication.risk_score?.toFixed(1)}%
-                </div>
-                <div className={`text-sm font-medium ${riskInfo.color}`}>
-                  {riskInfo.level} Risk
-                </div>
-                
-                {currentApplication.ml_predictions?.recommendation && (
-                  <div className="mt-4 text-sm text-gray-600">
-                    <p className="font-medium mb-2">AI Recommendation:</p>
-                    <p>{currentApplication.ml_predictions.recommendation}</p>
-                  </div>
-                )}
-              </div>
-            </Card.Content>
-          </Card>
-
           {/* Application Progress */}
           <Card>
             <Card.Header>
@@ -509,39 +532,84 @@ const ApplicationDetails = () => {
                   <div key={index} className="flex items-center space-x-3">
                     <div className={`w-3 h-3 rounded-full ${
                       item.status === 'completed' ? 'bg-green-500' :
-                      item.status === 'current' ? 'bg-blue-500' : 'bg-gray-300'
+                      item.status === 'current' ? 'bg-blue-500' : 
+                      item.status === 'rejected' ? 'bg-red-500' : 'bg-gray-300'
                     }`} />
-                    <span className={`text-sm ${
-                      item.status === 'completed' ? 'text-gray-900' :
-                      item.status === 'current' ? 'text-blue-600 font-medium' : 'text-gray-500'
-                    }`}>
-                      {item.step}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm ${
+                        item.status === 'completed' ? 'text-gray-900' :
+                        item.status === 'current' ? 'text-blue-600 font-medium' : 
+                        item.status === 'rejected' ? 'text-red-600 font-medium' : 'text-gray-500'
+                      }`}>
+                        {item.step}
+                      </p>
+                      <p className="text-xs text-gray-500">{item.role}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </Card.Content>
           </Card>
 
-          {/* Actions */}
-          {(currentApplication.status === 'CERTIFICATE_ISSUED' || currentApplication.status ==='APPROVED' ) && (
+          {/* Certificate Actions */}
+          {(currentApplication.status === 'CERTIFICATE_ISSUED' || currentApplication.status === 'APPROVED') && (
             <Card>
               <Card.Header>
                 <h3 className="text-lg font-semibold">Certificate</h3>
               </Card.Header>
               <Card.Content>
-              <Button className="w-full mb-2" onClick={downloadCertificate}>
-                  <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-                  Download Certificate
-                </Button>
+                <div className="space-y-2">
+                  <Button className="w-full mb-2" onClick={downloadCertificate}>
+                    <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                    Download Certificate
+                  </Button>
 
-                <Button variant="outline" className="w-full" onClick={viewCertificate}>
-                  <EyeIcon className="h-4 w-4 mr-2" />
-                  View Certificate
-                </Button>
+                  <Button variant="outline" className="w-full" onClick={viewCertificate}>
+                    <EyeIcon className="h-4 w-4 mr-2" />
+                    View Certificate
+                  </Button>
+                </div>
               </Card.Content>
             </Card>
           )}
+
+          {/* Application Info */}
+          <Card>
+            <Card.Header>
+              <h3 className="text-lg font-semibold">Application Info</h3>
+            </Card.Header>
+            <Card.Content>
+              <dl className="space-y-2">
+                <div>
+                  <dt className="text-xs font-medium text-gray-500">Application ID</dt>
+                  <dd className="text-sm text-gray-900">#{currentApplication.id}</dd>
+                </div>
+                
+                <div>
+                  <dt className="text-xs font-medium text-gray-500">Status</dt>
+                  <dd className="text-sm text-gray-900">{formatStatus(currentApplication.status)}</dd>
+                </div>
+                
+                {currentApplication.certificate_number && (
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500">Certificate Number</dt>
+                    <dd className="text-sm text-gray-900">{currentApplication.certificate_number}</dd>
+                  </div>
+                )}
+                
+                <div>
+                  <dt className="text-xs font-medium text-gray-500">Can Edit</dt>
+                  <dd className="text-sm text-gray-900">
+                    {currentApplication.canEdit ? (
+                      <span className="text-green-600">Yes</span>
+                    ) : (
+                      <span className="text-gray-500">No</span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </Card.Content>
+          </Card>
         </div>
       </div>
     </div>
