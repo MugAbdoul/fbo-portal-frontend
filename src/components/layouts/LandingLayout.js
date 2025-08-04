@@ -57,18 +57,17 @@ const socialMedia = [
             {/* Logo */}
             <div className="flex items-center">
               <Link to="/" className="flex items-center space-x-2">
+               <Link to="/" className="flex items-center space-x-2">
                 <img 
-                  src="/logo-rgb.png" 
-                  alt="RGB" 
-                  className="h-10 w-10"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-                <div>
+                    src={`${process.env.PUBLIC_URL}/images/rgb_logo.png`} 
+                    alt="RGB" 
+                    className="h-12"
+                  />
+                </Link>
+                {/* <div>
                   <h1 className="text-xl font-bold text-gray-900">RGB</h1>
                   <p className="text-xs text-gray-600">Church Monitoring Portal</p>
-                </div>
+                </div> */}
               </Link>
             </div>
 

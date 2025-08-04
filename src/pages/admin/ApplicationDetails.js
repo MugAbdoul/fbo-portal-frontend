@@ -54,16 +54,20 @@ const AdminApplicationDetails = () => {
   } = useForm();
 
   const selectedStatus = watch('status');
+  const hasAutoUpdatedStatus = React.useRef(false);
+  const isCurrentApplicationValid = currentApplication?.id?.toString() === id?.toString();
 
 
 
-  useEffect(() => {
-    if (id) {
-      dispatch(getApplicationById(id));
-      dispatch(getDocumentRequirements(id));
-      dispatch(getApplicationComments(id));
-    }
-  }, [dispatch, id]);
+
+
+  // useEffect(() => {
+  //   if (id) {
+  //     dispatch(getApplicationById(id));
+  //     dispatch(getDocumentRequirements(id));
+  //     dispatch(getApplicationComments(id));
+  //   }
+  // }, [dispatch, id]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -94,75 +98,65 @@ const AdminApplicationDetails = () => {
   };
 
   useEffect(() => {
-  if (id) {
-    dispatch(getApplicationById(id));
-    dispatch(getDocumentRequirements(id));
-    dispatch(getApplicationComments(id));
-  }
-}, [dispatch, id]);
+    if (id) {
+      dispatch(getApplicationById(id));
+      dispatch(getDocumentRequirements(id));
+      dispatch(getApplicationComments(id));
+    }
+  }, [dispatch, id]);
 
-  // Then, handle the initial status update if needed, with better state tracking
   useEffect(() => {
-    // Skip this effect if we don't have application data yet or if we're already processing
-    if (!currentApplication || isUpdatingStatus) return;
-    
+    if (!isCurrentApplicationValid || isUpdatingStatus || hasAutoUpdatedStatus.current) return;
+
     const needsStatusUpdate = (status) => {
       return (
-        (status === 'PENDING') ||
-        (status === 'TRANSFER_TO_DM') ||
-        (status === 'TRANSFER_TO_HOD') ||
-        (status === 'TRANSFER_TO_SG') ||
-        (status === 'TRANSFER_TO_CEO')
+        status === 'PENDING' ||
+        status === 'TRANSFER_TO_DM' ||
+        status === 'TRANSFER_TO_HOD' ||
+        status === 'TRANSFER_TO_SG' ||
+        status === 'TRANSFER_TO_CEO'
       );
     };
 
     const getCurrentStatus = () => {
-      let status = currentApplication.status;
-      if (status === 'PENDING')
-        return 'FBO_REVIEW';
-      else if (status === 'TRANSFER_TO_DM')
-        return 'DM_REVIEW';
-      else if (status === 'TRANSFER_TO_HOD')
-        return 'HOD_REVIEW';
-      else if (status === 'TRANSFER_TO_SG')
-        return 'SG_REVIEW';
-      else if (status === 'TRANSFER_TO_CEO')
-        return 'CEO_REVIEW';
-      return null;
+      switch (currentApplication.status) {
+        case 'PENDING': return 'FBO_REVIEW';
+        case 'TRANSFER_TO_DM': return 'DM_REVIEW';
+        case 'TRANSFER_TO_HOD': return 'HOD_REVIEW';
+        case 'TRANSFER_TO_SG': return 'SG_REVIEW';
+        case 'TRANSFER_TO_CEO': return 'CEO_REVIEW';
+        default: return null;
+      }
     };
 
-    // Only update status if it's one of the "needs update" states
     if (needsStatusUpdate(currentApplication.status)) {
       const newStatus = getCurrentStatus();
       if (newStatus) {
-        setIsUpdatingStatus(true); // Set loading state before making API call
-        
+        hasAutoUpdatedStatus.current = true; // ✅ Prevent further auto-updates
+        setIsUpdatingStatus(true);
+
         dispatch(updateApplicationStatus({
           applicationId: id,
           status: newStatus,
           comment: ''
         }))
-        .unwrap()
-        .then(() => {
-          // Explicitly refetch the application to get fresh data including canEdit
-          return dispatch(getApplicationById(id)).unwrap();
-        })
-        .then((result) => {
-          // Now we have fresh data, update canEdit
-          SetCanEdit(result.application.canEdit);
-        })
-        .catch((error) => {
-          console.error('Failed to update status:', error);
-        })
-        .finally(() => {
-          setIsUpdatingStatus(false);
-        });
+          .unwrap()
+          .then(() => dispatch(getApplicationById(id)).unwrap())
+          .then((result) => {
+            SetCanEdit(result.application.canEdit);
+          })
+          .catch((error) => {
+            console.error('Failed to update status:', error);
+          })
+          .finally(() => {
+            setIsUpdatingStatus(false);
+          });
       }
     } else {
-      // If we don't need to update the status, just set canEdit directly
       SetCanEdit(currentApplication.canEdit);
     }
-  }, [currentApplication, dispatch, id, isUpdatingStatus]);
+  }, [isCurrentApplicationValid, dispatch, id, isUpdatingStatus, currentApplication]);
+
 
   const formatStatus = (status) => {
     return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
@@ -326,7 +320,7 @@ const AdminApplicationDetails = () => {
     }
   };
 
-  if (loading || !currentApplication) {
+  if (loading || !isCurrentApplicationValid) {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-pulse">
@@ -346,7 +340,7 @@ const AdminApplicationDetails = () => {
   const statusToStepIndex = {
     'PENDING': 1,
     'FBO_REVIEW': 1,
-    'REVIEWING_AGAIN': 1,
+    'REVIEWING_AGAIN': 0,
     'TRANSFER_TO_DM': 2,
     'DM_REVIEW': 2,
     'TRANSFER_TO_HOD': 3,

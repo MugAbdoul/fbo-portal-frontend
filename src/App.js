@@ -71,6 +71,7 @@ function App() {
           <Route path="faq" element={<FAQPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="verify/:certificateNumber" element={<VerifyCertificate />} />
+          <Route path="verify/" element={<VerifyCertificate />} />
         </Route>
 
         {/* Auth Routes */}

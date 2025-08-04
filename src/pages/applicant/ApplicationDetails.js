@@ -255,7 +255,7 @@ const ApplicationDetails = () => {
   const statusToStepIndex = {
     'PENDING': 1,
     'FBO_REVIEW': 1,
-    'REVIEWING_AGAIN': 1,
+    'REVIEWING_AGAIN': 0,
     'TRANSFER_TO_DM': 2,
     'DM_REVIEW': 2,
     'TRANSFER_TO_HOD': 3,

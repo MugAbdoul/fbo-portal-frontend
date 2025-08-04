@@ -64,8 +64,8 @@ const HomePage = () => {
   ];
 
   const stats = [
-    { label: 'Applications Processed', value: '2,500+' },
-    { label: 'Organizations Authorized', value: '1,800+' },
+    { label: 'Applications Processed', value: '20+' },
+    { label: 'Organizations Authorized', value: '25+' },
     { label: 'Average Processing Time', value: '14 days' },
     { label: 'Success Rate', value: '94%' }
   ];
@@ -76,11 +76,11 @@ const HomePage = () => {
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-purple-800 text-white overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12  ">
             <div className="space-y-8">
               <h1 className="text-5xl lg:text-5xl font-bold leading-tight">
-                Church Monitoring and 
-                <span className="block text-blue-200">Management System</span>
+                Church Registration and
+                <span className="block text-blue-200">Approval Management System</span>
               </h1>
               <p className="text-xl text-blue-100 leading-relaxed">
                 The official digital platform for religious organizations to obtain 
@@ -108,15 +108,13 @@ const HomePage = () => {
               </div>
             </div>
             <div className="relative">
-              <div className="glass-effect rounded-2xl p-8">
-                <BuildingOfficeIcon className="h-32 w-32 text-blue-200 mx-auto mb-6" />
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">Digital Authorization</h3>
-                  <p className="text-blue-200">
-                    Get your religious organization officially recognized by the 
-                    Government of Rwanda through our streamlined digital process.
-                  </p>
-                </div>
+              <div className="glass-effect rounded-2xl p-4 overflow-hidden">
+                <img 
+                  src={`${process.env.PUBLIC_URL}/images/langing.avif`}
+                  alt="Church Registration" 
+                  className="w-full h-auto rounded-xl object-cover shadow-lg"
+                  style={{ maxHeight: '400px' }}
+                />
               </div>
             </div>
           </div>

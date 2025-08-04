@@ -100,6 +100,11 @@ export const updateApplicationStatus = createAsyncThunk(
   'applications/updateStatus',
   async ({ applicationId, status, comment }, { rejectWithValue }) => {
     try {
+      console.log("++++++++++++++")
+      console.log(applicationId)
+      console.log(status)
+      console.log(comment)
+      console.log("++++++++++++++")
       const response = await api.put('/application/status', {
         application_id: applicationId,
         status,

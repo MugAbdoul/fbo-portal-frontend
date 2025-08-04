@@ -57,7 +57,7 @@ const AboutPage = () => {
   const achievements = [
     {
       icon: BuildingOfficeIcon,
-      number: '1,800+',
+      number: '10+',
       label: 'Organizations Authorized',
       description: 'Successfully authorized religious organizations across Rwanda'
     },
@@ -69,7 +69,7 @@ const AboutPage = () => {
     },
     {
       icon: UserGroupIcon,
-      number: '500,000+',
+      number: '700+',
       label: 'Lives Impacted',
       description: 'Individuals served by authorized religious organizations'
     },

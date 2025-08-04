@@ -144,8 +144,8 @@ const AdminLayout = () => {
                   />
                 </div>
                 <div className="ml-3">
-                  <span className="text-xl font-bold text-white tracking-wide">RGB Admin</span>
-                  <div className="text-xs text-blue-100 mt-1">Administrative Portal</div>
+                  <span className="text-xl font-bold text-white tracking-wide">Administrative Portal</span>
+                  {/* <div className="text-xs text-blue-100 mt-1"></div> */}
                 </div>
               </div>
             </div>
@@ -210,21 +210,11 @@ const AdminLayout = () => {
         <div className="flex min-h-0 flex-1 flex-col bg-white shadow-md">
           {/* Desktop logo header */}
           <div className="relative flex-shrink-0 bg-gradient-to-r from-blue-700 to-blue-600 shadow-md">
-            <div className="h-24 flex flex-col justify-center px-6">
+            <div className="h-16 flex flex-col justify-center px-6">
               <div className="flex items-center">
-                <div className="bg-white p-2 rounded-lg shadow-sm">
-                  <img
-                    className="h-8 w-auto"
-                    src="/logo-rgb-white.png"
-                    alt="RGB"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-                <div className="ml-3">
-                  <span className="text-xl font-bold text-white tracking-wide">RGB Admin</span>
-                  <div className="text-xs text-blue-100 mt-1">Administrative Portal</div>
+                <div className="ml-1">
+                  <span className="text-lg font-bold text-white tracking-wide">Administrative Portal</span>
+                  {/* <div className="text-xs text-blue-100 mt-1">Administrative Portal</div> */}
                 </div>
               </div>
             </div>
